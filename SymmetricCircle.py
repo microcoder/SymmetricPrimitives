@@ -101,18 +101,7 @@ class SymmetricCircle(Operator):
         
         bm.free
         
-        return {'FINISHED'}  # Lets Blender know the operator finished successfully.
-
-    # For custom UI
-    # def draw(self, context):
-    #     col = self.layout.column()
-    #     col.label(text="Custom Interface!")
-
-    #     row = col.row()
-    #     row.prop(self, "radius")
-    #     row.prop(self, "segments")
-
-    #     col.prop(self, "segments")
+        return {'FINISHED'}  # Lets Blender know the operator finished successfully
 
 
 classes = (
@@ -138,90 +127,3 @@ def unregister():
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    
-
-
-
-
-
-
-
-
-''' Для теста в текстовом редакторе Блендера:
-
-import bpy
-import bmesh
-
-
-#bpy.ops.object.mode_set(mode='EDIT')
-#bpy.ops.object.mode_set(mode='OBJECT')
-
-
-if bpy.context.mode == 'OBJECT':
-    bpy.ops.object.select_all(action='DESELECT')                # Deselect all objects
-    bl_mesh = bpy.data.meshes.new('SymmetricCircle')            # Creating a new object mesh
-    bl_obj = bpy.data.objects.new('SymmetricCircle', bl_mesh)   # Creating a new object and join there object mesh
-    bpy.context.collection.objects.link(bl_obj)                 # Put the object into current collection of the scene
-    bpy.context.view_layer.objects.active = bl_obj              # Set as the active object in the scene
-    bl_obj.select_set(True)                                     # Set as selected object
-elif bpy.context.mode == 'EDIT_MESH':
-    bl_obj = bpy.context.active_object
-    bl_mesh = bl_obj.data
-else:
-    pass
-
-
-# Make a new BMesh
-bm = bmesh.new()
-
-# Add a circle xxx, should return all geometry created, not just verts.
-segments=32
-bmesh.ops.create_circle(bm, cap_ends=False, radius=0.5, segments=segments)
-
-# Оставляем вершины только у четверти круга. TODO: доработать. Сейчас работает кратно 4 вершинам
-for v in bm.verts[1:int(segments/4*3)]:
-    bm.verts.remove(v)
-
-# https://docs.blender.org/api/2.93/bmesh.ops.html#bmesh.ops.mirror
-# geom = This is input geometry of list of BMVert, BMEdge, BMFace
-#bmesh.ops.mirror(bm, geom=bm.verts[:] + bm.edges[:], merge_dist=0.00001, axis='X')
-#bmesh.ops.mirror(bm, geom=bm.verts[:] + bm.edges[:], merge_dist=0.00001, axis='Y')
-#bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.00001)
-
-#bmesh.ops.symmetrize(bm, input=bm.edges[:], direction='-X')
-#bmesh.ops.symmetrize(bm, input=bm.edges[:], direction='-Y')
-#bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.00001)
-#bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-
-
-bm.verts.ensure_lookup_table()
-bm.verts[0].select_set(True)
-
-#bm.verts.ensure_lookup_table()
-#for v in bm.verts:
-#    print(v.co, v.normal)
-
-
-bpy.ops.object.mode_set(mode='OBJECT')
-# Convert (load) object mesh to BMesh. Circle mesh + current mesh
-bm.from_mesh(bl_mesh)
-# Convert (moving) mesh from BMesh to object mesh
-bm.to_mesh(bl_mesh)
-bm.free()
-#bl_mesh.update()
-#bl_mesh.vertices[0].select = True
-bpy.ops.object.mode_set(mode='EDIT')
-bpy.ops.mesh.select_mode(type='VERT')
-bpy.ops.mesh.select_linked()
-
-
-
-
-# And finally select it and make it active
-#if bpy.context.mode == 'OBJECT':
-#    bl_obj.select_set(True)
-#    bpy.context.view_layer.objects.active = bl_obj
-
-
-
-'''
