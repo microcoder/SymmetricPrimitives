@@ -1,5 +1,4 @@
-# Это пример выноса кода одной логической функции аддона в отдельный файл
-
+import math
 import bpy
 import bmesh
 from bpy.types import Operator
@@ -20,7 +19,7 @@ def set_segments(self, value):
     self['segments'] = value
 
 
-class SymmetricCircle(Operator):
+class OLDSymmetricCircle(Operator):
     """My Object Moving Script"""            # Use this as a tooltip for menu items and buttons.
 
     bl_idname = "mesh.symmetric_circle_add"  # Unique identifier for buttons and menu items to reference.
@@ -33,80 +32,188 @@ class SymmetricCircle(Operator):
                           description='Radius of the circle',
                           unit='LENGTH')
 
-    segments: IntProperty(name="Segments", min=4, soft_max=100, default=32, step=4, get=get_segments, set=set_segments)
+    segments: IntProperty(name="Segments", min=8, soft_max=100, default=32, step=4, get=get_segments, set=set_segments)
     # segments: IntProperty(name="Segments", min=4, soft_max=100, default=32, step=4)
 
 
     def execute(self, context):
 
         # self.report({'INFO'}, 'F: %.2f  B: %s  S: %r' % (0.0001, True, 'Test string'))
+        # NOTE:  Не забыть, что код можно запускать в тестовом редакторе Blendera, чтобы его не перезапускать каждый раз!!
+        #        Однако, код в редакторе Blender работает иначе. Логика создания bmesh.ops.create_circle полностью отличается - вершины индексируются не по порядку!
+        
+        # FIXME: При запуске Blender в консоли, выпадает ошибка - ModuleNotFoundError: No module named 'add_mesh_SymmetricPrimitives'
+        # FIXME: Код работает в Edit Mode, нужно доработать, чтобы работало также и в Object Mode
+        # FIXME: При вызове bmesh.ops.create_circle() иногда круг создается с вершинами индексы которых назначены на вершины которые расположены не последовательно,
+        #        что даёт некоорректные результаты при удалении 3/4 вершин
+
 
         if context.mode == 'OBJECT':
-            bpy.ops.object.select_all(action='DESELECT')                # Deselect all objects
-            bl_mesh = bpy.data.meshes.new('SymmetricCircle')            # Creating a new object mesh
-            bl_obj = bpy.data.objects.new('SymmetricCircle', bl_mesh)   # Creating a new object and join there object mesh
-            context.collection.objects.link(bl_obj)                     # Put the object into current collection of the scene
-            context.view_layer.objects.active = bl_obj                  # Set as the active object in the scene
-            bl_obj.select_set(True)                                     # Set as selected object
+            bpy.ops.object.select_all(action='DESELECT')                          # Deselect all objects
+            blender_mesh = bpy.data.meshes.new('SymmetricCircle')                 # Creating a new empty data (object mesh)
+            blender_obj = bpy.data.objects.new('SymmetricCircle', blender_mesh)   # Creating a new object and join there the object mesh
+            context.collection.objects.link(blender_obj)                          # Put the object into current collection of current scene
+            context.view_layer.objects.active = blender_obj                       # Set as the active object in the scene
+            blender_obj.select_set(True)                                          # Set as selected object
         elif context.mode == 'EDIT_MESH':
-            bl_obj = bpy.context.active_object
-            bl_mesh = bl_obj.data
             bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.mesh.select_mode(type='VERT')
+            blender_mesh = context.active_object.data
         else:
             return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
 
-        # Make a new BMesh
-        bm = bmesh.new()
-        # Add a circle xxx, should return all geometry created, not just verts.
-        bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)
+        bm = bmesh.from_edit_mesh(blender_mesh)
+        circle_verts = bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)['verts']  # return only list of BMVert
 
-        # Оставляем вершины только у четверти круга.
-        # TODO: доработать. Сейчас работает кратно 4 вершинам
-        for v in bm.verts[1:int(self.segments/4*3)]:
+        # Remove 3/4 vertices from circle_verts
+        # Alternate: bmesh.ops.delete(bm, geom=edges, context=['VERTS', 'EDGES'])
+        for v in circle_verts[self.segments//4+1:]:
             bm.verts.remove(v)
+            circle_verts.remove(v)
 
-        # geom = This is input geometry of list of BMVert, BMEdge, BMFace. https://docs.blender.org/api/2.93/bmesh.ops.html#bmesh.ops.mirror
-        bmesh.ops.mirror(bm, geom=bm.verts[:] + bm.edges[:], merge_dist=0.00001, axis='X')
-        bmesh.ops.mirror(bm, geom=bm.verts[:] + bm.edges[:], merge_dist=0.00001, axis='Y')
+        # Search edges of vertices and removing them
+        for e in list(set([edge for vertex in circle_verts for edge in vertex.link_edges])):
+            bm.edges.remove(e)
 
-        # Alternate variant
-        # bmesh.ops.symmetrize(bm, input=bm.edges[:], direction='-X')
-        # bmesh.ops.symmetrize(bm, input=bm.edges[:], direction='-Y')
-        # Additionally need merge vertices
-        # bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.00001)
+        # Mirroring vertices
+        circle_verts += bmesh.ops.mirror(bm, geom=circle_verts[:-1], merge_dist=0.0001, axis='Y')['geom']
+        circle_verts += bmesh.ops.mirror(bm, geom=circle_verts[1:-1], merge_dist=0.0001, axis='X')['geom']
 
-        # Select first vertex of the circle
-        bm.verts.ensure_lookup_table()
-        bm.verts[0].select_set(True)
+        # Symmetrize geometry
+        # circle_geom = bmesh.ops.symmetrize(bm, input=circle_geom, direction='-X', dist=0.0001)['geom']
+        # circle_geom = bmesh.ops.symmetrize(bm, input=circle_geom, direction='Y', dist=0.0001)['geom']
 
-        # Switch to Object Mode
-        bpy.ops.object.mode_set(mode='OBJECT')
-        # Append current BMesh and object mesh from load (Circle mesh + object mesh)
-        bm.from_mesh(bl_mesh)
-        # Unload BMesh to object mesh
-        bm.to_mesh(bl_mesh)
-        bm.free()
+        # Creating circle edges and selecting vertices and edges
+        circle_verts[0].select = True
+        for i in range(1, len(circle_verts)):
+            bm.edges.new([circle_verts[i-1], circle_verts[i]])
+            circle_verts[i].select = True
+        bm.edges.new([circle_verts[-1], circle_verts[0]])  # Creating closed edge between first and last vertices
 
-        # Switch to Edit Mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_mode(type='VERT')
+        bm.select_flush_mode()  # will ensure the associated edges and faces will be selected also.
 
-        bl_mesh.vertices[0].select = True
-        # bl_mesh.update()
-        bpy.ops.mesh.select_linked()
+        # Show the updates in the viewport and recalculate n-gon tessellation
+        bmesh.update_edit_mesh(blender_mesh, False)
 
 
-        # TODO: Нужно сделать еще recalculate Normals. Изучить функции ниже:
-        # bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        # bmesh.utils.edge_rotate(edge, ccw=False)
+        # Search edges of vertices and removing them
+        # for e in list(set([edge for vertex in circle_verts for edge in vertex.link_edges])):
+        #     bm.edges.remove(e)
 
-        # And finally select it and make it active.
-        # TODO: Нужно снимать выделения с других объектов
-        # bl_obj.select_set(True)
-        # context.view_layer.objects.active = bl_obj
+        # Selecting vertex
+        # circle_geom[1].select = True
 
-        return {'FINISHED'}            # Lets Blender know the operator finished successfully.
+        # Remove edges with vertices
+        # bmesh.ops.delete(bm, geom=circle_edges, context='EDGES')
+
+        # Selecting all vertices of BMesh
+        # bm.verts[0].select_set(True)
+        # bm.select_flush_mode()  # will ensure the associated edges and faces will be selected also.
+
+        # bm = bmesh.new()
+        # bm.from_mesh(blender_mesh)
+        # bm.to_mesh(blender_mesh)
+        # blender_mesh.update()
+        # bm.free()     # Вызывать только в Object Mode, иначе будет ошибка при повторном вызове метода в режиме Edit Mode
+
+        return {'FINISHED'}  # Lets Blender know the operator finished successfully.
+
+    # For custom UI
+    # def draw(self, context):
+    #     col = self.layout.column()
+    #     col.label(text="Custom Interface!")
+
+    #     row = col.row()
+    #     row.prop(self, "radius")
+    #     row.prop(self, "segments")
+
+    #     col.prop(self, "segments")
+
+
+class SymmetricCircle(Operator):
+    """My Object Moving Script"""            # Use this as a tooltip for menu items and buttons. - FIXME:
+
+    bl_idname = "mesh.symmetric_circle_add"  # Unique identifier for buttons and menu items to reference
+    bl_label = "Symmetric Circle"            # Display name in the interface
+    bl_options = {'REGISTER', 'UNDO'}        # Enable undo for the operator
+
+    radius: FloatProperty(attr='bf_Radius', name='Radius', min=0.0001, soft_min=0, soft_max=100, default=0.1,
+                          description='Radius of the circle', unit='LENGTH')
+
+    segments: IntProperty(name="Segments", min=8, soft_max=100, default=32, step=4, get=get_segments, set=set_segments)
+
+
+    def execute(self, context):
+
+        # self.report({'INFO'}, 'Example report')
+
+        # NOTE: Находясь в режиме редактирования, Blender обрабатывает копию сетки, которая затем сохраняется как данные объекта (context.object.data)
+        #       после выхода из режима редактирования. Это может стать причиной того, что не отображаются сделанные изменения в исходной сетке:
+        #       https://stackoverflow.com/questions/20349361/selected-vertex-did-not-highlight-in-blender-3d
+        #           * bmesh.from_mesh(mesh)       - Загрузка в BMesh из исходной сетки
+        #           * bmesh.from_edit_mesh(mesh)  - Загрузка в BMesh из текущей сетки (копия исходной сетки, находящейся сейчас в режиме редактирования)
+        # NOTE: Не забыть, что код можно запускать в тестовом редакторе Blender'a, чтобы его не перезапускать каждый раз!!
+        #       Однако, код в редакторе Blender работает иначе. Логика создания bmesh.ops.create_circle полностью отличается - иногда вершины индексируются не по порядку!
+        
+        # FIXME: При запуске Blender в консоли, выпадает ошибка - ModuleNotFoundError: No module named 'add_mesh_SymmetricPrimitives'
+
+
+        bm = bmesh.new()
+
+        if context.mode == 'OBJECT':
+            bpy.ops.object.select_all(action='DESELECT')                          # Deselect all objects
+            blender_mesh = bpy.data.meshes.new('SymmetricCircle')                 # Creating a new empty data (object mesh)
+            blender_obj = bpy.data.objects.new('SymmetricCircle', blender_mesh)   # Creating a new object and join there the object mesh
+            context.collection.objects.link(blender_obj)                          # Put the object into current collection of current scene
+            context.view_layer.objects.active = blender_obj                       # Set as the active object in the scene
+            blender_obj.select_set(True)                                          # Set as selected object
+        elif context.mode == 'EDIT_MESH':
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.mesh.select_mode(type='VERT')
+            blender_mesh = context.active_object.data
+            bm = bmesh.from_edit_mesh(blender_mesh)
+        else:
+            return {'FINISHED'}            # Lets Blender know the operator finished successfully.
+         
+        
+        ###################################################################
+        # bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)['verts']  # return only list of BMVert
+
+        # see: https://stackoverflow.com/questions/42879081/how-to-generate-a-set-of-co-ordinates-for-a-circle-in-python-using-the-circle-fo/42879185
+        circle_verts = []
+        x,y,z = 0, 0, 0  # Center of circle
+        step_size = 2 * math.pi / self.segments  # The length of the circle (2*pi) is dividing by setted amount of segments
+
+        t = 0
+        while t < 2 * math.pi:
+            circle_verts.append(bm.verts.new((self.radius * math.sin(t) + x, self.radius * math.cos(t) + y, z)))
+            t += step_size
+        
+        bm.verts.ensure_lookup_table()  # You need add it when your add/remove elements in your mesh
+        bm.verts.index_update()
+        
+        circle_verts[0].select = True  # Creating circle edges and selecting vertices and edges
+        
+        for i in range(1, len(circle_verts)):
+            bm.edges.new([circle_verts[i], circle_verts[i-1]])
+            circle_verts[i].select = True
+        
+        bm.edges.new([circle_verts[0], circle_verts[-1]])  # Creating closed edge between first and last vertices
+        bm.edges.ensure_lookup_table()  # You need add it when your add/remove elements in your mesh
+        bm.select_flush_mode()  # will ensure the associated edges and faces will be selected also.
+        
+        ####################################################################
+        
+        
+        if context.mode == 'OBJECT':
+            bm.to_mesh(blender_mesh)  # from bmesh to object mesh (context.object.data)
+        elif context.mode == 'EDIT_MESH':
+            bmesh.update_edit_mesh(blender_mesh, False) # from bmesh to edit mesh (current edited mesh, copy of source mesh)
+        
+        bm.free
+        
+        return {'FINISHED'}  # Lets Blender know the operator finished successfully.
 
     # For custom UI
     # def draw(self, context):
