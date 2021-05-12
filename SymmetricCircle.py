@@ -45,6 +45,7 @@ class SymmetricCircle(Operator):
         #       Однако, код в редакторе Blender работает иначе. Логика создания bmesh.ops.create_circle полностью отличается - иногда вершины индексируются не по порядку!
         
         # FIXME: При запуске Blender в консоли, выпадает ошибка - ModuleNotFoundError: No module named 'add_mesh_SymmetricPrimitives'
+        # TODO:  Сделать self-test. Полу-реализация доступна в Blend файле версии. Реализовать через вызов оператора mesh.symmetric_circle_add()
 
 
         bm = bmesh.new()
@@ -66,13 +67,14 @@ class SymmetricCircle(Operator):
          
         
         ###################################################################
-        # bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)['verts']  # return only list of BMVert
+        # bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)['verts']  # returning list of BMVert
 
         # see: https://stackoverflow.com/questions/42879081/how-to-generate-a-set-of-co-ordinates-for-a-circle-in-python-using-the-circle-fo/42879185
         circle_verts = []
-        x,y,z = 0, 0, 0  # Center of circle
-        step_size = 2 * math.pi / self.segments  # The length of the circle (2*pi) is dividing by setted amount of segments
+        x,y,z = (0, 0, 0,)  # Center of circle
+        step_size = 2 * math.pi / self.segments
 
+        # Creating vertices:
         t = 0
         while t < 2 * math.pi:
             circle_verts.append(bm.verts.new((self.radius * math.sin(t) + x, self.radius * math.cos(t) + y, z)))
@@ -81,8 +83,9 @@ class SymmetricCircle(Operator):
         bm.verts.ensure_lookup_table()  # You need add it when your add/remove elements in your mesh
         bm.verts.index_update()
         
-        circle_verts[0].select = True  # Creating circle edges and selecting vertices and edges
-        
+        # Creating edges and selecting vertices and edges:
+        circle_verts[0].select = True
+
         for i in range(1, len(circle_verts)):
             bm.edges.new([circle_verts[i], circle_verts[i-1]])
             circle_verts[i].select = True
