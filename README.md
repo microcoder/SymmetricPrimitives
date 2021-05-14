@@ -1,9 +1,9 @@
 # Overview
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Screenshot_20210513_213451.png" width="60%" />
+<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Screenshot_20210513_213451.png" width="70%" />
 
-<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Screenshot_20210513_213544.png" width="60%" />
+<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Screenshot_20210513_213544.png" width="70%" />
 </div>
 
 This is an add-on for Blender 3D which creating symmetric circle primitives instead asymmetric circles.
