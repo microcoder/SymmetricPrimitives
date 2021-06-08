@@ -51,6 +51,17 @@ def set_auto_segments(self, value):
         self['segments'] = calculate_segments(self)
 
 
+def get_max_truncation(self):
+    return self.get('max_truncation', 0.0005)
+
+
+def set_max_truncation(self, value):
+    self['max_truncation'] = value
+
+    if value:
+        self['segments'] = calculate_segments(self)
+
+
 class SymmetricCircle(Operator):
     """My Object Moving Script"""            # Use this as a tooltip for menu items and buttons. - FIXME:
 
@@ -75,6 +86,7 @@ class SymmetricCircle(Operator):
                                   description='Maximum allowed truncation a circle diameter when use option Auto segments',
                                   default=0.0005, soft_min=0.0001, soft_max=10, step=0.001, precision=2,
                                   subtype='DISTANCE', # unit='CAMERA'
+                                  get=get_max_truncation, set=set_max_truncation
     )
     
 
