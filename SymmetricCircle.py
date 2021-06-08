@@ -79,7 +79,7 @@ class SymmetricCircle(Operator):
                           get=get_segments, set=set_segments
     )
     auto_segments: BoolProperty(name='Auto segments',
-                                description='Auto calculation of optimal amount segments for setted inaccuracy by diameter when used modifier Subdiv',
+                                description='Auto calculation of optimal amount segments for setted inaccuracy by diameter when used modifier Subdiv relative to original diameter',
                                 get=get_auto_segments, set=set_auto_segments
     )
     max_truncation: FloatProperty(name='Max truncation',
