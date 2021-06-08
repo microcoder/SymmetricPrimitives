@@ -16,7 +16,7 @@ This is an add-on for Blender 3D which creating symmetric circle primitives. You
 
 Also the addon allow do calculation of optimal amount segments for setted inaccuracy by diameter when used modifier Subdiv:
 
-<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/demo_auto_segments.gig" />
+<img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/demo_auto_segments.gif" />
 
 # Installation
 
