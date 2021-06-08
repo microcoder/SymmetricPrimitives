@@ -58,7 +58,7 @@ def get_max_truncation(self):
 def set_max_truncation(self, value):
     self['max_truncation'] = value
 
-    if value:
+    if self.auto_segments:
         self['segments'] = calculate_segments(self)
 
 
