@@ -5,19 +5,18 @@ from bpy.types import Operator
 from bpy.props import FloatProperty, IntProperty, BoolProperty
 
 
-# This is table of contains values of truncation a circle on each 1mm of diameter for each amount subdivision when used modifier Subdivision Surface.
+# This is table contains constant values of truncation for a circle by each 1mm in diameter for each amount subdivision when used modifier Subdivision Surface.
 # keys - amount sudivision, values - value of truncation on 1mm of diameter for this subdivision
-circle_trunc_values = {  '4': 0.333334,  '8': 0.097631, '12': 0.044658, '16': 0.025374, '20': 0.016315,
-                        '24': 0.011358, '28': 0.008357, '32': 0.006405, '36': 0.005064, '40': 0.004104,
-                        '44': 0.003393, '48': 0.002852, '52': 0.00243,  '56': 0.002096, '60': 0.001826,
-                        '64': 0.001605, '68': 0.001422, '72': 0.001268, '76': 0.001139, '80': 0.001028,
-                        '84': 0.000932, '88': 0.000849, '92': 0.000777, '96': 0.000714, '100': 0.000658}
+circle_trunc_values = { 4: 0.333334,   8: 0.097631,  12: 0.0446582, 16: 0.0253736, 20: 0.0163146, 24: 0.011358,  28: 0.0083574,
+                       32: 0.0064048, 36: 0.0050642, 40: 0.0041038, 44: 0.003393,  48: 0.0028518, 52: 0.0024304, 56: 0.002096,
+                       60: 0.001826,  64: 0.0016052, 68: 0.001422,  72: 0.0012684, 76: 0.0011386, 80: 0.0010276, 84: 0.000932,
+                       88: 0.0008492, 92: 0.000777,  96: 0.0007136, 100: 0.0006578}
 
 
 def calculate_segments(self):
     for i in circle_trunc_values.items():
-        if round(self.radius * 2 * 1000 * i[1], 2) <= self.max_truncation * 1000:
-            return int(i[0])
+        if round(self.radius * 1000 * i[1], 2) <= self.max_trunc_radius * 1000:
+            return i[0]
 
 
 def get_radius(self):
@@ -51,12 +50,12 @@ def set_auto_segments(self, value):
         self['segments'] = calculate_segments(self)
 
 
-def get_max_truncation(self):
-    return self.get('max_truncation', 0.0005)
+def get_max_trunc_radius(self):
+    return self.get('max_trunc_radius', 0.00025)
 
 
-def set_max_truncation(self, value):
-    self['max_truncation'] = value
+def set_max_trunc_radius(self, value):
+    self['max_trunc_radius'] = value
 
     if self.auto_segments:
         self['segments'] = calculate_segments(self)
@@ -75,18 +74,19 @@ class SymmetricCircle(Operator):
                           get=get_radius, set=set_radius
     )
     segments: IntProperty(name='Segments', description='Amount segments a circle',
-                          min=4, soft_max=100, default=32, step=4,
+                          min=4, soft_max=1000, default=32, step=4,
                           get=get_segments, set=set_segments
     )
     auto_segments: BoolProperty(name='Auto segments',
-                                description='Auto calculation of optimal amount segments for setted inaccuracy by diameter when used modifier Subdiv relative to original diameter',
+                                description='Automatic calculation of the optimal number of segments for the specified radius truncation tolerance ' \
+                                            'when used modifier Subdiv relative to original radius',
                                 get=get_auto_segments, set=set_auto_segments
     )
-    max_truncation: FloatProperty(name='Max truncation',
-                                  description='Maximum allowed truncation a circle diameter when use option Auto segments',
-                                  default=0.0005, soft_min=0.0001, soft_max=10, step=0.001, precision=2,
-                                  subtype='DISTANCE', # unit='CAMERA'
-                                  get=get_max_truncation, set=set_max_truncation
+    max_trunc_radius: FloatProperty(name='Maximum truncation tolerance by radius',
+                                    description='Maximum truncation tolerance by radius when use the option Auto segments',
+                                    default=0.00025, soft_min=0.0001, soft_max=10, step=0.001, precision=2,
+                                    subtype='DISTANCE', # unit='CAMERA'
+                                    get=get_max_trunc_radius, set=set_max_trunc_radius
     )
     
 
@@ -183,7 +183,7 @@ class SymmetricCircle(Operator):
         row.prop(self, 'auto_segments')
         row_right = row.row(align=True)
         row_right.active = self.auto_segments
-        row_right.prop(self, 'max_truncation', text='')
+        row_right.prop(self, 'max_trunc_radius', text='')
         col.separator()
 
 
