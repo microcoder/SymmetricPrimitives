@@ -18,7 +18,7 @@ Also the addon allow do automatic calculation of optimal amount segments for the
 
 <img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/demo_auto_segments.gif" />
 
-The option **has restrict** on maximum value of segments. It has limit to 100 segments.
+The option **has restrict** maximum to 1000 segments.
 
 # Installation
 
