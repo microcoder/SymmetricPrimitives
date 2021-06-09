@@ -159,30 +159,29 @@ class SymmetricCircle(Operator):
         # bmesh.ops.create_circle(bm, cap_ends=False, radius=self.radius, segments=self.segments)['verts']  # returning list of BMVert
 
         # see: https://stackoverflow.com/questions/42879081/how-to-generate-a-set-of-co-ordinates-for-a-circle-in-python-using-the-circle-fo/42879185
-        
+        circle_verts = []
         x,y,z = (0, 0, 0,)  # Center of circle
         step_size = 2 * math.pi / self.segments
 
         # Creating vertices:
         t = 0
         while t < 2 * math.pi:
-            # circle_verts.append()
-            bm.verts.new((self.radius * math.sin(t) + x, self.radius * math.cos(t) + y, z))
+            circle_verts.append(bm.verts.new((self.radius * math.sin(t) + x, self.radius * math.cos(t) + y, z)))
             t += step_size
 
-        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0000001)
-        
+        bmesh.ops.remove_doubles(bm, verts=circle_verts, dist=0.0000001)
+        circle_verts = [v for v in circle_verts if v.is_valid]  # cleaning the list from <BMVert dead at ..>        
         bm.verts.ensure_lookup_table()  # You need add it when your add/remove elements in your mesh
         bm.verts.index_update()
         
         # Creating edges and selecting vertices and edges:
-        bm.verts[0].select = True
+        circle_verts[0].select = True
 
-        for i in range(1, len(bm.verts)):
-            bm.edges.new([bm.verts[i], bm.verts[i-1]])
-            bm.verts[i].select = True
+        for i in range(1, len(circle_verts)):
+            bm.edges.new([circle_verts[i], circle_verts[i-1]])
+            circle_verts[i].select = True
         
-        bm.edges.new([bm.verts[0], bm.verts[-1]])  # Creating closed edge between first and last vertices
+        bm.edges.new([circle_verts[0], circle_verts[-1]])  # Creating closed edge between first and last vertices
         bm.edges.ensure_lookup_table()  # You need add it when your add/remove elements in your mesh
         bm.select_flush_mode()  # will ensure the associated edges and faces will be selected also.
         
@@ -194,7 +193,8 @@ class SymmetricCircle(Operator):
         elif context.mode == 'EDIT_MESH':
             bmesh.update_edit_mesh(blender_mesh, False) # from bmesh to edit mesh (current edited mesh, copy of source mesh)
         
-        bm.free
+        # bm.clear()
+        # bm.free()
         
         return {'FINISHED'}  # Lets Blender know the operator finished successfully
 
