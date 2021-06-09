@@ -17,6 +17,7 @@ def calculate_segments(self):
     for i in circle_trunc_values.items():
         if round(self.radius * 1000 * i[1], 2) <= self.max_trunc_radius * 1000:
             return i[0]
+    return 100  # default value, limit the maximum value of calculate segments
 
 
 def get_radius(self):
