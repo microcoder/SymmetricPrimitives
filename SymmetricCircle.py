@@ -57,7 +57,7 @@ def get_radius(self):
 def set_radius(self, value):
     self['radius'] = value
 
-    if self.auto_segments:
+    if self.auto_segmentation:
         self['segments'] = calculate_segments(self)
 
 
@@ -67,16 +67,16 @@ def get_segments(self):
 
 
 def set_segments(self, value):
-    if not self.auto_segments:
+    if not self.auto_segmentation:
         self['segments'] = value // 4 * 4
 
 
-def get_auto_segments(self):
-    return self.get('auto_segments', False)
+def get_auto_segmentation(self):
+    return self.get('auto_segmentation', False)
 
 
-def set_auto_segments(self, value):
-    self['auto_segments'] = value
+def set_auto_segmentation(self, value):
+    self['auto_segmentation'] = value
 
     if value:
         self['segments'] = calculate_segments(self)
@@ -89,7 +89,7 @@ def get_max_trunc_radius(self):
 def set_max_trunc_radius(self, value):
     self['max_trunc_radius'] = value
 
-    if self.auto_segments:
+    if self.auto_segmentation:
         self['segments'] = calculate_segments(self)
 
 
@@ -109,13 +109,13 @@ class SymmetricCircle(Operator):
                           min=4, soft_max=1000, step=4, default=32,
                           get=get_segments, set=set_segments
     )
-    auto_segments: BoolProperty(name='Auto segments',
-                                description='Automatic calculation of the optimal number of segments for the specified radius truncation tolerance ' \
-                                            'when used modifier Subdiv relative to original radius. This option has restricted maximum to 1000 segments',
-                                get=get_auto_segments, set=set_auto_segments
+    auto_segmentation: BoolProperty(name='Auto segmentation',
+                                    description='Automatic calculation of the optimal number of segments for the specified radius truncation tolerance ' \
+                                                'when used modifier Subdiv relative to original radius. This option has restricted maximum to 1000 segments',
+                                    get=get_auto_segmentation, set=set_auto_segmentation
     )
     max_trunc_radius: FloatProperty(name='Maximum truncation tolerance by radius',
-                                    description='Maximum truncation tolerance by radius when use the option Auto segments',
+                                    description='Maximum truncation tolerance by radius when use the option Auto segmentation',
                                     default=0.00025, soft_min=0.0001, soft_max=10, step=0.001, precision=2,
                                     subtype='DISTANCE', # unit='CAMERA'
                                     get=get_max_trunc_radius, set=set_max_trunc_radius
@@ -209,12 +209,12 @@ class SymmetricCircle(Operator):
 
         row = col.row(align=True, heading='Segments')
         row.prop(self, 'segments', text='')
-        row.active = True if not self.auto_segments else False
+        row.active = True if not self.auto_segmentation else False
 
         row = col.row(align=True)
-        row.prop(self, 'auto_segments')
+        row.prop(self, 'auto_segmentation')
         row_right = row.row(align=True)
-        row_right.active = self.auto_segments
+        row_right.active = self.auto_segmentation
         row_right.prop(self, 'max_trunc_radius', text='')
         col.separator()
 
