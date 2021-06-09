@@ -110,8 +110,8 @@ class SymmetricCircle(Operator):
                           get=get_segments, set=set_segments
     )
     auto_segments: BoolProperty(name='Auto segments',
-                                description=f'Automatic calculation of the optimal number of segments for the specified radius truncation tolerance ' \
-                                            'when used modifier Subdiv relative to original radius. This option has restricted maximum to {circle_trunc_values[-1]} segments',
+                                description='Automatic calculation of the optimal number of segments for the specified radius truncation tolerance ' \
+                                            'when used modifier Subdiv relative to original radius. This option has restricted maximum to 1000 segments',
                                 get=get_auto_segments, set=set_auto_segments
     )
     max_trunc_radius: FloatProperty(name='Maximum truncation tolerance by radius',
