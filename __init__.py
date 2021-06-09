@@ -21,10 +21,10 @@
 bl_info = {
     "name": "Symmetric Primitives",
     "author": "Multiple Authors",
-    "version": (0, 0, 1),
+    "version": (0, 5, 0),
     "blender": (2, 80, 0),
     "location": "View3D > Add > Mesh",
-    "description": "Add symmetric primitives",
+    "description": "Creating symmetric primitives",
     "warning": "",
     "category": "Add Mesh",
 }
