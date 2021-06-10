@@ -18,7 +18,7 @@ Also the addon allow do automatic calculation of optimal amount segments for the
 
 <img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/demo_auto_segments.gif" />
 
-Differents diameters of cylinders but truncation of radius/diameter some the same to both case after apply modifier Subdivision Surface:
+Differents diameters of cylinders but truncation of radius/diameter about the same in both case after apply modifier Subdivision Surface:
 
 <img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Diagram.png" />
 
