@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/microcoder/SymmetricPrimitives/main/extras/Screenshot_20210424_125914.png" />
 
-Blender don't create symmetric circle primitives, see for details: https://developer.blender.org/T87779
+The Blender don't allow creating symmetric circle primitives, see for details: https://developer.blender.org/T87779
 
 # Overview
 
