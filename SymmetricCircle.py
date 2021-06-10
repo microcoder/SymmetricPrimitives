@@ -5,9 +5,9 @@ from bpy.types import Operator
 from bpy.props import FloatProperty, IntProperty, BoolProperty
 
 
-# This is table contains constant values of truncation for a circle by each 1mm in diameter for each amount subdivision when used modifier Subdivision Surface.
-# keys - amount sudivision, values - value of truncation on 1mm of diameter for this subdivision
-circle_trunc_values = {
+# This is table contains constant values of truncation by radius is relatively original radius when applies modifier Subdivision Surface
+# keys - amount sudivision, values - value of truncation
+subsurf_radius_trunc_values = {
     4: 0.333333313, 8: 0.097631067, 12: 0.044658184, 16: 0.025373548, 20: 0.016314536, 24: 0.010971054, 28: 0.008357316, 32: 0.006404966, 
     36: 0.004987121, 40: 0.004103929, 44: 0.003358349, 48: 0.002827346, 52: 0.002430379, 56: 0.002095923, 60: 0.001816005, 64: 0.001597404, 
     68: 0.001415908, 72: 0.001263544, 76: 0.001138449, 80: 0.001027584, 84: 0.000932068, 88: 0.000849292, 92: 0.000777096, 96: 0.000713691, 
@@ -43,11 +43,11 @@ circle_trunc_values = {
 
 
 def calculate_segments(self):
-    for i in circle_trunc_values.items():
+    for i in subsurf_radius_trunc_values.items():
         if round(self.radius * 1000 * i[1], 2) <= self.max_trunc_radius * 1000:
             return i[0]
     
-    return list(circle_trunc_values.keys())[-1]  # default value, limit the maximum value of calculate segments
+    return list(subsurf_radius_trunc_values.keys())[-1]  # default value, limit the maximum value of calculate segments
 
 
 def get_radius(self):
