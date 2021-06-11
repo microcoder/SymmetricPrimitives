@@ -26,8 +26,13 @@ The option **has restrict** maximum to 1000 segments.
 
 # Installation
 
-1. Download last git version of this addon to your computer. Press green button "Code" on top right corner and there select option "Download ZIP" in dropdown menu.
 
-2. Unpack Zip file to your Blender config folder, for example: `../blender/2.93/scripts/addons/SymmetricPrimitives`
+1. Download the [latest release](https://github.com/microcoder/SymmetricPrimitives/releases/latest).
 
-3. Run Blender and go to the menu `Edit -> Preferences -> Add-ons` then find in Add Mesh category this add-on and toggle its to enabled.
+2. Run the Blender and go to the menu `Edit → Preferences → Add-ons` then click on `Install`:
+
+<img src="./extras/installation-1.png" />
+
+3. Find and select the downloaded zip file, then click Install Add-on.
+
+4. Enable the add-on toggle the checkbox in Add Mesh category.
