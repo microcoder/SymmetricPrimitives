@@ -46,8 +46,13 @@ def calculate_segments(self):
     for i in subsurf_radius_trunc_values.items():
         if round(self.radius * 1000 * i[1], 2) <= self.max_trunc_radius * 1000:
             return i[0]
-    
-    return list(subsurf_radius_trunc_values.keys())[-1]  # default value, limit the maximum value of calculate segments
+
+    # NOTE: Здесь нет возможности отправить сообщение юзеру об ограничении.
+    # self это какой-то экземпляр bpy.types.MESH_OT_symmetric_circle_add который не позволяет вызвать self.report()
+    # Если проверять на ограничение сегментов в SymmetricCircle, где доступен self.report() то будет избыточная проверка
+    # в каждом цикле, а не только тогда когда изменяется свойство segments. Проверка в методе SymmetricCircle.execute() это overhead.
+
+    return list(subsurf_radius_trunc_values.keys())[-1]  # limit reached
 
 
 def get_radius(self):
@@ -191,7 +196,7 @@ class SymmetricCircle(Operator):
         if context.mode == 'OBJECT':
             bm.to_mesh(blender_mesh)  # from bmesh to object mesh (context.object.data)
         elif context.mode == 'EDIT_MESH':
-            bmesh.update_edit_mesh(blender_mesh, False) # from bmesh to edit mesh (current edited mesh, copy of source mesh)
+            bmesh.update_edit_mesh(mesh=blender_mesh, loop_triangles=False) # from bmesh to edit mesh (current edited mesh, copy of source mesh)
         
         # bm.clear()
         # bm.free()
